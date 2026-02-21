@@ -9,33 +9,26 @@
 
 <body>
 
-  <!-- ================= HERO MOBILE (SÓ IMAGEM) ================= -->
+  <!-- HERO MOBILE -->
   <section class="hero-mobile">
-
     <button class="scroll-btn">
       Inscreva-se abaixo ↓
     </button>
-
   </section>
 
-
-  <!-- ================= FORM SECTION ================= -->
+  <!-- FORM SECTION -->
   <section class="form-section">
-
     <div class="hero-content">
 
       <span class="badge">
         16 de Maio | 07:30h | Praia Mar Hotel - São Luís MA
       </span>
 
-      <h1>
-        O maior evento para empresários e empreendedores
-      </h1>
-
+      <h1>O maior evento para empresários e empreendedores</h1>
       <h2 class="highlight">TRANSFORMAI</h2>
 
       <p class="desc">
-         O TRANSFORMAI é uma imersão para empresários e empreendedores cristãos que compreenderam que 
+        O TRANSFORMAI é uma imersão para empresários e empreendedores cristãos que compreenderam que 
         prosperar não é apenas crescer, mas administrar com visão, decidir com sabedoria e liderar com propósito.
       </p>
 
@@ -45,60 +38,79 @@
         <input name="email" type="email" placeholder="E-mail" required />
         <input name="whatsapp" placeholder="DDD+WhatsApp" required />
 
-        <button id="chekout-button">
+        <button type="submit">
           QUERO GARANTIR MINHA VAGA
         </button>
 
-        <span id="msg"></span>
-
       </form>
 
-    </div>
+      <span id="msg"></span>
 
+    </div>
   </section>
 
- <!-- Stripe -->
-  <script src="https://js.stripe.com/v3/"></script>
+  <footer>
+    CONEXÃO&DESIGN • Todos os direitos reservados
+  </footer>
 
+  <!-- SCRIPT PRINCIPAL -->
   <script>
-    const stripe = Stripe("pk_test_51T34yhGtwMdIM1C4rgLp3ChDBxuF14L7uqT0wGDWoUEcHYuvrrcLorBNpPjRVMxlqnAY757fidcycB6QRCO5YmZa00iaFVtT06");
+    // Scroll mobile
+    document.querySelector(".scroll-btn")
+      ?.addEventListener("click", () => {
+        document.querySelector(".form-section")
+          .scrollIntoView({ behavior: "smooth" });
+      });
 
-    const checkoutButton = document.getElementById("checkout-button");
+    // FORM + STRIPE
+    const form = document.getElementById("leadForm");
 
-    checkoutButton.addEventListener("click", async () => {
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-      checkoutButton.innerText = "Processando...";
-      checkoutButton.disabled = true;
+      const btn = form.querySelector("button");
+      btn.innerText = "Processando...";
+      btn.disabled = true;
+
+      const data = {
+        name: form.name.value,
+        email: form.email.value,
+        whatsapp: form.whatsapp.value
+      };
 
       try {
 
-        const response = await fetch("/api/create-checkout", {
+        // 1️⃣ Salva lead no Google Sheets
+        await fetch("https://script.google.com/macros/s/AKfycbyfcCdFthcKv2O5gE9c3LwjyBDOZsrfDMJwzETXx5ETrSeOjbVuU4uGVaaXBEM8PztopA/exec", {
           method: "POST",
+          body: JSON.stringify(data)
         });
 
-        const session = await response.json();
+        // 2️⃣ Cria sessão Stripe
+        const response = await fetch("/api/create-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
 
-        if (session.id) {
-          await stripe.redirectToCheckout({
-            sessionId: session.id,
-          });
+        const checkout = await response.json();
+
+        if (checkout.url) {
+          window.location.href = checkout.url;
         } else {
-          alert("Erro ao iniciar pagamento.");
-          checkoutButton.disabled = false;
-          checkoutButton.innerText = "QUERO GARANTIR MINHA VAGA AGORA";
+          alert("Erro ao criar checkout.");
+          btn.disabled = false;
+          btn.innerText = "QUERO GARANTIR MINHA VAGA";
         }
 
       } catch (error) {
-        alert("Erro na conexão.");
-        checkoutButton.disabled = false;
-        checkoutButton.innerText = "QUERO GARANTIR MINHA VAGA AGORA";
+        alert("Erro ao processar.");
+        btn.disabled = false;
+        btn.innerText = "QUERO GARANTIR MINHA VAGA";
       }
 
     });
   </script>
-  <footer>
-    CONEXÃO&DESIGN • Todos os direitos reservados
-  </footer>
 
 </body>
 </html>

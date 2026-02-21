@@ -1,5 +1,4 @@
-/* scroll suave mobile */
-
+/* SCROLL MOBILE */
 document.querySelector(".scroll-btn")
 ?.addEventListener("click", () => {
   document.querySelector(".form-section")
@@ -7,11 +6,16 @@ document.querySelector(".scroll-btn")
 });
 
 
-/* GOOGLE SHEETS */
+/* CHECKOUT + GOOGLE SHEETS */
+
 const form = document.querySelector("form");
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
+
+  const btn = form.querySelector("button");
+  btn.innerText = "Processando...";
+  btn.disabled = true;
 
   const data = {
     name: form.querySelector("input[placeholder='Nome']").value,
@@ -19,28 +23,32 @@ form.addEventListener("submit", async (e) => {
     whatsapp: form.querySelector("input[placeholder='DDD+WhatsApp']").value
   };
 
-  /* BOTÃO CHECKOUT */
+  try {
 
-const checkoutBtn = document.querySelector("#checkout-btn");
-
-if(checkoutBtn){
-  checkoutBtn.addEventListener("click", async () => {
-
-    checkoutBtn.innerText = "Redirecionando...";
-    checkoutBtn.disabled = true;
-
-    const response = await fetch("/api/create-checkout", {
+    // 1️⃣ Salva lead no Google Sheets
+    await fetch("https://script.google.com/macros/s/AKfycbyfcCdFthcKv2O5gE9c3LwjyBDOZsrfDMJwzETXx5ETrSeOjbVuU4uGVaaXBEM8PztopA/exec", {
       method: "POST",
+      body: JSON.stringify(data)
     });
 
-    const data = await response.json();
+    // 2️⃣ Cria checkout Stripe
+    const response = await fetch("/api/create-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
+    });
 
-    if (data.url) {
-      window.location.href = data.url;
+    const checkout = await response.json();
+
+    if (checkout.url) {
+      window.location.href = checkout.url;
     } else {
       alert("Erro ao criar checkout");
-      checkoutBtn.disabled = false;
+      btn.disabled = false;
     }
-  });
-}
-})
+
+  } catch (err) {
+    alert("Erro ao processar");
+    btn.disabled = false;
+  }
+});
