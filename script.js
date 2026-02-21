@@ -1,54 +1,57 @@
-/* SCROLL MOBILE */
-document.querySelector(".scroll-btn")
-?.addEventListener("click", () => {
-  document.querySelector(".form-section")
-    .scrollIntoView({ behavior: "smooth" });
-});
 
+    // Scroll mobile
+    document.querySelector(".scroll-btn")
+      ?.addEventListener("click", () => {
+        document.querySelector(".form-section")
+          .scrollIntoView({ behavior: "smooth" });
+      });
 
-/* CHECKOUT + GOOGLE SHEETS */
+    // FORM + STRIPE
+    const form = document.getElementById("leadForm");
 
-const form = document.querySelector("form");
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+      const btn = form.querySelector("button");
+      btn.innerText = "Processando...";
+      btn.disabled = true;
 
-  const btn = form.querySelector("button");
-  btn.innerText = "Processando...";
-  btn.disabled = true;
+      const data = {
+        name: form.name.value,
+        email: form.email.value,
+        whatsapp: form.whatsapp.value
+      };
 
-  const data = {
-    name: form.querySelector("input[placeholder='Nome']").value,
-    email: form.querySelector("input[placeholder='E-mail']").value,
-    whatsapp: form.querySelector("input[placeholder='DDD+WhatsApp']").value
-  };
+      try {
 
-  try {
+        // 1️⃣ Salva lead no Google Sheets
+        await fetch("https://script.google.com/macros/s/AKfycbyfcCdFthcKv2O5gE9c3LwjyBDOZsrfDMJwzETXx5ETrSeOjbVuU4uGVaaXBEM8PztopA/exec", {
+          method: "POST",
+          body: JSON.stringify(data)
+        });
 
-    // 1️⃣ Salva lead no Google Sheets
-    await fetch("https://script.google.com/macros/s/AKfycbyfcCdFthcKv2O5gE9c3LwjyBDOZsrfDMJwzETXx5ETrSeOjbVuU4uGVaaXBEM8PztopA/exec", {
-      method: "POST",
-      body: JSON.stringify(data)
+        // 2️⃣ Cria sessão Stripe
+        const response = await fetch("/api/create-checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
+
+        const checkout = await response.json();
+
+        if (checkout.url) {
+          window.location.href = checkout.url;
+        } else {
+          alert("Erro ao criar checkout.");
+          btn.disabled = false;
+          btn.innerText = "QUERO GARANTIR MINHA VAGA";
+        }
+
+      } catch (error) {
+        alert("Erro ao processar.");
+        btn.disabled = false;
+        btn.innerText = "QUERO GARANTIR MINHA VAGA";
+      }
+
     });
-
-    // 2️⃣ Cria checkout Stripe
-    const response = await fetch("/api/create-checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    });
-
-    const checkout = await response.json();
-
-    if (checkout.url) {
-      window.location.href = checkout.url;
-    } else {
-      alert("Erro ao criar checkout");
-      btn.disabled = false;
-    }
-
-  } catch (err) {
-    alert("Erro ao processar");
-    btn.disabled = false;
-  }
-});
+ 
