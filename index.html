@@ -45,7 +45,7 @@
         <input name="email" type="email" placeholder="E-mail" required />
         <input name="whatsapp" placeholder="DDD+WhatsApp" required />
 
-        <button type="submit">
+        <button id="chekout-button">
           QUERO GARANTIR MINHA VAGA
         </button>
 
@@ -57,10 +57,48 @@
 
   </section>
 
+ <!-- Stripe -->
+  <script src="https://js.stripe.com/v3/"></script>
+
+  <script>
+    const stripe = Stripe("pk_test_51T34yhGtwMdIM1C4rgLp3ChDBxuF14L7uqT0wGDWoUEcHYuvrrcLorBNpPjRVMxlqnAY757fidcycB6QRCO5YmZa00iaFVtT06");
+
+    const checkoutButton = document.getElementById("checkout-button");
+
+    checkoutButton.addEventListener("click", async () => {
+
+      checkoutButton.innerText = "Processando...";
+      checkoutButton.disabled = true;
+
+      try {
+
+        const response = await fetch("/api/create-checkout", {
+          method: "POST",
+        });
+
+        const session = await response.json();
+
+        if (session.id) {
+          await stripe.redirectToCheckout({
+            sessionId: session.id,
+          });
+        } else {
+          alert("Erro ao iniciar pagamento.");
+          checkoutButton.disabled = false;
+          checkoutButton.innerText = "QUERO GARANTIR MINHA VAGA AGORA";
+        }
+
+      } catch (error) {
+        alert("Erro na conexão.");
+        checkoutButton.disabled = false;
+        checkoutButton.innerText = "QUERO GARANTIR MINHA VAGA AGORA";
+      }
+
+    });
+  </script>
   <footer>
     CONEXÃO&DESIGN • Todos os direitos reservados
   </footer>
 
-  <script src="script.js"></script>
 </body>
 </html>

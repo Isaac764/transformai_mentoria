@@ -19,21 +19,28 @@ form.addEventListener("submit", async (e) => {
     whatsapp: form.querySelector("input[placeholder='DDD+WhatsApp']").value
   };
 
-  const btn = form.querySelector("button");
-  btn.innerText = "Enviando...";
-  btn.disabled = true;
+  /* BOTÃO CHECKOUT */
 
-  try{
-    await fetch("https://script.google.com/macros/s/AKfycbzf_yvEBbW3CFIWhvifzkG0iQyySHiwdPCc8MslFlKHvXlU7sXgqtYWztPv-UtGpV1ukQ/exec", {
+const checkoutBtn = document.querySelector("#checkout-btn");
+
+if(checkoutBtn){
+  checkoutBtn.addEventListener("click", async () => {
+
+    checkoutBtn.innerText = "Redirecionando...";
+    checkoutBtn.disabled = true;
+
+    const response = await fetch("/api/create-checkout", {
       method: "POST",
-      body: JSON.stringify(data)
     });
 
-    btn.innerText = "Inscrição realizada✅";
-    form.reset();
+    const data = await response.json();
 
-  }catch(err){
-    btn.innerText = "Erro ❌";
-    btn.disabled = false;
-  }
-});
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Erro ao criar checkout");
+      checkoutBtn.disabled = false;
+    }
+  });
+}
+})
