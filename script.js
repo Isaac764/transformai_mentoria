@@ -31,27 +31,30 @@
         });
 
         // 2️⃣ Cria sessão Stripe
-        const response = await fetch("/api/create-checkout.js", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(data)
-        });
+        const response = await fetch("/api/create-checkout", {
+           method: "POST",
+           headers: { "Content-Type": "application/json" },
+           body: JSON.stringify(data)
+           });
 
-        const checkout = await response.json();
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error("Erro API:", errorText);
+            alert("Erro na API: " + errorText);
+            btn.disabled = false;
+            btn.innerText = "QUERO GARANTIR MINHA VAGA";
+          return;
+          }
+        
+            const checkout = await response.json();
 
-        if (checkout.url) {
-          window.location.href = checkout.url;
-        } else {
-          alert("Erro ao criar checkout.");
-          btn.disabled = false;
-          btn.innerText = "QUERO GARANTIR MINHA VAGA";
-        }
-
-      } catch (error) {
-        alert("Erro ao processar.");
-        btn.disabled = false;
-        btn.innerText = "QUERO GARANTIR MINHA VAGA";
-      }
+            window.location.href = checkout.url;
+          } catch (error) {
+            console.error("Erro:", error);
+            alert("Erro ao processar sua solicitação");
+            btn.disabled = false;
+            btn.innerText = "QUERO GARANTIR MINHA VAGA";
+          }
 
     });
  
