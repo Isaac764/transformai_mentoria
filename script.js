@@ -31,7 +31,7 @@
         });
 
         // 2️⃣ Cria sessão Stripe
-        const response = await fetch("/api/create-checkout", {
+        const response = await fetch("/api/create-checkout.js", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data)
